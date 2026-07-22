@@ -1,10 +1,11 @@
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, date, timezone
 from pathlib import Path
 from typing import Optional
 from uuid import uuid4
 
+from app.business_rules import validate_status_transition
 from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
 
 _DATA_FILE = os.getenv("TASKS_DATA_FILE", str(Path(__file__).resolve().parent / "tasks.json"))
@@ -49,6 +50,7 @@ def add_task(payload: TaskCreate) -> TaskResponse:
         status=payload.status,
         priority=payload.priority,
         assignee=payload.assignee,
+        due_date=payload.due_date,
         created_at=now,
         updated_at=now,
     )
@@ -57,9 +59,18 @@ def add_task(payload: TaskCreate) -> TaskResponse:
     return task
 
 
+def _is_overdue(task: TaskResponse) -> bool:
+    if task.status == TaskStatus.DONE:
+        return False
+    if task.due_date is None:
+        return False
+    return task.due_date < date.today()
+
+
 def get_all_tasks(
     status: Optional[TaskStatus] = None,
     priority: Optional[TaskPriority] = None,
+    overdue: Optional[bool] = None,
 ) -> list[TaskResponse]:
     _load_tasks()
     tasks = list(_tasks.values())
@@ -67,6 +78,8 @@ def get_all_tasks(
         tasks = [t for t in tasks if t.status == status]
     if priority is not None:
         tasks = [t for t in tasks if t.priority == priority]
+    if overdue is not None:
+        tasks = [t for t in tasks if _is_overdue(t) is overdue]
     return tasks
 
 
@@ -84,6 +97,9 @@ def update_task(task_id: str, payload: TaskUpdate) -> Optional[TaskResponse]:
     updates = payload.model_dump(exclude_unset=True)
     if not updates:
         return task
+
+    if "status" in updates:
+        validate_status_transition(task.status, updates["status"])
 
     now = datetime.now(timezone.utc)
     updated_data = task.model_dump()

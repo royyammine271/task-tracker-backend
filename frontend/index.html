@@ -23,46 +23,72 @@
         box-sizing: border-box;
       }
 
+      html,
+      body {
+        min-height: 100%;
+      }
+
       body {
         margin: 0;
         font-family: Arial, Helvetica, sans-serif;
-        background: var(--bg);
+        background: radial-gradient(circle at top, rgba(37, 99, 235, 0.14), transparent 30%), var(--bg);
         color: var(--text);
       }
 
       .page {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 24px;
+        padding: 32px 24px 40px;
       }
 
       .page-header {
-        margin-bottom: 24px;
+        margin-bottom: 28px;
       }
 
       .page-header h1 {
-        margin: 0 0 8px;
-        font-size: 2rem;
+        margin: 0 0 12px;
+        font-size: 2.2rem;
+        letter-spacing: 0.02em;
       }
 
       .page-header .subtitle {
         margin: 0;
         color: var(--muted);
         font-size: 1rem;
+        line-height: 1.6;
+        max-width: 44rem;
       }
 
       .board {
         display: grid;
         grid-template-columns: repeat(3, minmax(240px, 1fr));
-        gap: 16px;
+        gap: 20px;
       }
 
       .kanban-column {
+        position: relative;
+        overflow: hidden;
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 16px;
-        min-height: 320px;
+        border-radius: 18px;
+        padding: 20px;
+        min-height: 340px;
+        box-shadow: 0 14px 35px rgba(20, 33, 61, 0.08);
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .kanban-column:hover {
+        transform: translateY(-2px);
+      }
+
+      .kanban-column::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, rgba(37, 99, 235, 0.95), rgba(37, 99, 235, 0.25));
       }
 
       .column-header {
@@ -93,30 +119,43 @@
       }
 
       .task-card {
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 12px;
+        border: 1px solid transparent;
+        border-radius: 14px;
+        padding: 16px;
         background: #fcfdff;
         cursor: grab;
+        box-shadow: 0 12px 24px rgba(20, 33, 61, 0.06);
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .task-card:hover {
+        border-color: rgba(37, 99, 235, 0.2);
+        box-shadow: 0 18px 34px rgba(20, 33, 61, 0.1);
+      }
+
+      .task-card:active {
+        cursor: grabbing;
+        transform: translateY(1px);
       }
 
       .task-card.dragging {
         opacity: 0.6;
-        transform: rotate(2deg);
+        transform: rotate(2deg) scale(1.02);
       }
 
       .kanban-column.drag-over {
         border-color: var(--accent);
-        box-shadow: inset 0 0 0 2px var(--accent-soft);
+        box-shadow: inset 0 0 0 2px var(--accent-soft), 0 14px 35px rgba(37, 99, 235, 0.08);
       }
 
       .empty-column {
         margin: 0;
-        padding: 12px;
+        padding: 18px;
         border: 1px dashed var(--border);
-        border-radius: 8px;
+        border-radius: 14px;
         color: var(--muted);
         text-align: center;
+        background: rgba(219, 234, 254, 0.35);
       }
 
       .task-card h3 {
@@ -138,6 +177,48 @@
         gap: 8px;
         margin-bottom: 10px;
         font-size: 0.9rem;
+      }
+
+      .task-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .due-date {
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--accent);
+      }
+
+      .overdue-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-weight: 700;
+        background: rgba(220, 38, 38, 0.12);
+        color: var(--high);
+      }
+
+      .filter-button {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .filter-button.active {
+        background: rgba(37, 99, 235, 0.1);
+        border-color: rgba(37, 99, 235, 0.4);
+        color: var(--accent);
       }
 
       .priority {
@@ -189,16 +270,23 @@
         border: none;
         background: var(--accent);
         color: white;
-        padding: 10px 14px;
-        border-radius: 8px;
+        padding: 12px 18px;
+        border-radius: 10px;
         cursor: pointer;
         font-weight: 700;
+        box-shadow: 0 16px 28px rgba(37, 99, 235, 0.18);
+        transition: transform 0.2s ease, background-color 0.2s ease;
+      }
+
+      .new-task-button:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
       }
 
       .modal-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(20, 33, 61, 0.45);
+        background: rgba(20, 33, 61, 0.58);
         display: none;
         align-items: center;
         justify-content: center;
@@ -212,10 +300,11 @@
 
       .modal-dialog {
         background: var(--surface);
-        border-radius: 12px;
+        border-radius: 18px;
         width: min(100%, 560px);
-        padding: 20px;
-        box-shadow: 0 20px 50px rgba(20, 33, 61, 0.2);
+        padding: 26px;
+        box-shadow: 0 30px 70px rgba(20, 33, 61, 0.18);
+        border: 1px solid rgba(37, 99, 235, 0.08);
       }
 
       .modal-header {
@@ -259,9 +348,19 @@
       .modal-field select,
       .modal-field textarea {
         border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 10px 12px;
+        border-radius: 10px;
+        padding: 12px 14px;
         font: inherit;
+        background: #fff;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .modal-field input:focus,
+      .modal-field select:focus,
+      .modal-field textarea:focus {
+        outline: none;
+        border-color: rgba(37, 99, 235, 0.8);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
       }
 
       .modal-field input.input-error,
@@ -284,14 +383,17 @@
       .modal-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 8px;
-        margin-top: 8px;
+        gap: 10px;
+        margin-top: 12px;
       }
 
       .modal-actions button {
-        border-radius: 8px;
-        padding: 10px 12px;
+        border-radius: 10px;
+        padding: 12px 16px;
         cursor: pointer;
+        font-weight: 700;
+        transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+        min-width: 110px;
       }
 
       .modal-actions .secondary {
@@ -300,10 +402,20 @@
         color: var(--text);
       }
 
+      .modal-actions .secondary:hover {
+        transform: translateY(-1px);
+        border-color: rgba(37, 99, 235, 0.3);
+        color: var(--accent);
+      }
+
       .modal-actions .primary {
         border: none;
         background: var(--accent);
         color: white;
+      }
+
+      .modal-actions .primary:hover {
+        background: #1d4ed8;
       }
 
       @media (max-width: 800px) {
@@ -323,6 +435,9 @@
       <div class="page-actions">
         <button type="button" class="new-task-button" id="new-task-button">
           New Task
+        </button>
+        <button type="button" class="filter-button" id="overdue-filter-button">
+          Show overdue
         </button>
       </div>
 
@@ -391,6 +506,10 @@
             </select>
           </div>
           <div class="modal-field">
+            <label for="task-due-date">Due Date</label>
+            <input id="task-due-date" name="due_date" type="date" />
+          </div>
+          <div class="modal-field">
             <label for="task-assignee">Assignee</label>
             <input id="task-assignee" name="assignee" type="text" placeholder="Who is responsible?" />
           </div>
@@ -405,7 +524,7 @@
     </div>
 
     <script>
-      const BASE_URL = "http://localhost:8000";
+      const BASE_URL = "http://127.0.0.1:8001";
       const STATUS_ORDER = ["ToDo", "InProgress", "Done"];
       const PRIORITY_ORDER = {
         High: 0,
@@ -413,12 +532,13 @@
         Low: 2,
       };
       const ALLOWED_TRANSITIONS = {
-        ToDo: [],
+        ToDo: ["InProgress"],
         InProgress: ["Done"],
         Done: ["InProgress"],
       };
 
       let tasks = [];
+      let draggedTaskId = null;
       let currentModalMode = "create";
       let currentTaskId = null;
       let currentTaskOriginalStatus = null;
@@ -454,6 +574,13 @@
         return (ALLOWED_TRANSITIONS[currentStatus] || []).includes(targetStatus);
       }
 
+      function findTaskById(taskId) {
+        if (!taskId && taskId !== 0) {
+          return null;
+        }
+        return tasks.find((item) => String(item.id) === String(taskId));
+      }
+
       async function updateTaskStatus(taskId, targetStatus) {
         try {
           const response = await fetch(`${BASE_URL}/tasks/${taskId}`, {
@@ -473,6 +600,15 @@
           console.error("Unable to update task status", error);
           alert("That move is not allowed by the current workflow.");
         }
+      }
+
+      function isTaskOverdue(task) {
+        if (!task?.due_date || task.status === "Done") {
+          return false;
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        return String(task.due_date) < today;
       }
 
       function renderBoard(taskList) {
@@ -510,11 +646,18 @@
             card.draggable = true;
 
             card.addEventListener("dragstart", (event) => {
-              event.dataTransfer?.setData("text/plain", task.id || "");
+              const taskId = String(task.id ?? "");
+              draggedTaskId = taskId;
+              event.dataTransfer?.setData("text/plain", taskId);
+              event.dataTransfer?.setData("application/task-id", taskId);
+              if (event.dataTransfer) {
+                event.dataTransfer.effectAllowed = "move";
+              }
               card.classList.add("dragging");
             });
 
             card.addEventListener("dragend", () => {
+              draggedTaskId = null;
               card.classList.remove("dragging");
               document.querySelectorAll(".kanban-column").forEach((column) => {
                 column.classList.remove("drag-over");
@@ -525,6 +668,8 @@
             const description = escapeHtml(task.description || "");
             const priority = escapeHtml(task.priority || "Medium");
             const assignee = escapeHtml(task.assignee || "Unassigned");
+            const dueDate = task.due_date ? escapeHtml(task.due_date) : "";
+            const overdue = isTaskOverdue(task);
 
             card.innerHTML = `
               <h3>${title}</h3>
@@ -532,6 +677,10 @@
               <div class="task-meta">
                 <span class="priority ${priority.toLowerCase()}">${priority}</span>
                 <span class="assignee">${assignee}</span>
+              </div>
+              <div class="task-footer">
+                ${dueDate ? `<span class="due-date">Due ${dueDate}</span>` : ""}
+                ${overdue ? `<span class="overdue-pill">Overdue</span>` : ""}
               </div>
               <button type="button" class="edit-button">Edit</button>
             `;
@@ -547,9 +696,15 @@
         });
       }
 
-      async function fetchTasks() {
+      async function fetchTasks(overdue = null) {
         try {
-          const response = await fetch(`${BASE_URL}/tasks`);
+          const params = new URLSearchParams();
+          if (overdue !== null) {
+            params.set("overdue", String(overdue));
+          }
+
+          const url = `${BASE_URL}/tasks${params.toString() ? `?${params.toString()}` : ""}`;
+          const response = await fetch(url);
 
           if (!response.ok) {
             throw new Error(`Request failed with status ${response.status}`);
@@ -566,12 +721,15 @@
       function attachColumnListeners() {
         document.querySelectorAll(".kanban-column").forEach((column) => {
           column.addEventListener("dragover", (event) => {
-            const taskId = event.dataTransfer?.getData("text/plain");
-            const task = tasks.find((item) => item.id === taskId);
+            event.preventDefault();
+
+            const taskId = draggedTaskId || event.dataTransfer?.getData("application/task-id") || event.dataTransfer?.getData("text/plain");
+            const task = findTaskById(taskId);
 
             if (task && canMoveTaskToStatus(task.status, column.dataset.status)) {
-              event.preventDefault();
               column.classList.add("drag-over");
+            } else {
+              column.classList.remove("drag-over");
             }
           });
 
@@ -583,8 +741,8 @@
             event.preventDefault();
             column.classList.remove("drag-over");
 
-            const taskId = event.dataTransfer?.getData("text/plain");
-            const task = tasks.find((item) => item.id === taskId);
+            const taskId = draggedTaskId || event.dataTransfer?.getData("application/task-id") || event.dataTransfer?.getData("text/plain");
+            const task = findTaskById(taskId);
 
             if (!task) {
               return;
@@ -617,6 +775,7 @@
         const descriptionInput = document.getElementById("task-description");
         const statusInput = document.getElementById("task-status");
         const priorityInput = document.getElementById("task-priority");
+        const dueDateInput = document.getElementById("task-due-date");
         const assigneeInput = document.getElementById("task-assignee");
         const taskIdInput = document.getElementById("task-id");
         const modalTitle = document.getElementById("task-modal-title");
@@ -626,6 +785,7 @@
         if (descriptionInput) descriptionInput.value = "";
         if (statusInput) statusInput.value = "ToDo";
         if (priorityInput) priorityInput.value = "Medium";
+        if (dueDateInput) dueDateInput.value = "";
         if (assigneeInput) assigneeInput.value = "";
         if (taskIdInput) taskIdInput.value = "";
         if (modalTitle) modalTitle.textContent = "New Task";
@@ -643,6 +803,7 @@
         const descriptionInput = document.getElementById("task-description");
         const statusInput = document.getElementById("task-status");
         const priorityInput = document.getElementById("task-priority");
+        const dueDateInput = document.getElementById("task-due-date");
         const assigneeInput = document.getElementById("task-assignee");
         const taskIdInput = document.getElementById("task-id");
         const modalTitle = document.getElementById("task-modal-title");
@@ -660,6 +821,7 @@
           if (descriptionInput) descriptionInput.value = task.description || "";
           if (statusInput) statusInput.value = task.status || "ToDo";
           if (priorityInput) priorityInput.value = task.priority || "Medium";
+          if (dueDateInput) dueDateInput.value = task.due_date || "";
           if (assigneeInput) assigneeInput.value = task.assignee || "";
           if (taskIdInput) taskIdInput.value = task.id || "";
         }
@@ -705,21 +867,31 @@
         const descriptionInput = document.getElementById("task-description");
         const statusInput = document.getElementById("task-status");
         const priorityInput = document.getElementById("task-priority");
+        const dueDateInput = document.getElementById("task-due-date");
         const assigneeInput = document.getElementById("task-assignee");
 
         const title = titleInput?.value?.trim() || "";
         const description = descriptionInput?.value || "";
         const status = statusInput?.value || "ToDo";
         const priority = priorityInput?.value || "Medium";
+        const dueDate = dueDateInput?.value?.trim() || "";
         const assignee = assigneeInput?.value?.trim() || "";
 
-        return {
+        const payload = {
           title,
           description: description || "",
           status,
           priority,
           assignee: assignee ? assignee : null,
         };
+
+        if (dueDate !== "") {
+          payload.due_date = dueDate;
+        } else if (currentModalMode === "edit") {
+          payload.due_date = null;
+        }
+
+        return payload;
       }
 
       async function submitTask() {
@@ -773,7 +945,9 @@
             const errorData = await response.json().catch(() => null);
             const detail = typeof errorData?.detail === "string"
               ? errorData.detail
-              : "The server rejected this task.";
+              : Array.isArray(errorData?.detail)
+                ? errorData.detail.map((item) => item?.msg).filter(Boolean).join("; ")
+                : "The server rejected this task.";
             showModalError(detail);
             return;
           }
@@ -819,9 +993,36 @@
         });
       }
 
+      function updateOverdueFilterButton(overdueActive) {
+        const button = document.getElementById("overdue-filter-button");
+        if (!button) {
+          return;
+        }
+
+        if (overdueActive) {
+          button.classList.add("active");
+          button.textContent = "Showing overdue";
+        } else {
+          button.classList.remove("active");
+          button.textContent = "Show overdue";
+        }
+      }
+
+      function attachFilterListeners() {
+        const button = document.getElementById("overdue-filter-button");
+        let overdueActive = false;
+
+        button?.addEventListener("click", async () => {
+          overdueActive = !overdueActive;
+          updateOverdueFilterButton(overdueActive);
+          await fetchTasks(overdueActive ? true : null);
+        });
+      }
+
       document.addEventListener("DOMContentLoaded", () => {
         attachColumnListeners();
         attachModalListeners();
+        attachFilterListeners();
         fetchTasks();
       });
     </script>

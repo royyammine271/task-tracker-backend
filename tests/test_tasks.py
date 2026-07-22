@@ -1,4 +1,5 @@
 import importlib
+from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
 
@@ -54,8 +55,38 @@ def test_create_task_valid_returns_201_with_full_body(
     assert body["status"] == "ToDo"
     assert body["priority"] == "High"
     assert body["assignee"] == "Jean-Pierre"
+    assert body["due_date"] is None
     assert body["created_at"]
     assert body["updated_at"]
+
+
+def test_create_task_valid_due_date_returns_201(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/tasks",
+        json={
+            "title": "Task with due date",
+            "due_date": "2026-08-15",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["due_date"] == "2026-08-15"
+
+
+def test_create_task_invalid_due_date_returns_422(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/tasks",
+        json={
+            "title": "Task with invalid due date",
+            "due_date": "15-08-2026",
+        },
+    )
+
+    assert response.status_code == 422
 
 
 def test_create_task_missing_title_returns_422(
@@ -222,6 +253,121 @@ def test_patch_partial_update_keeps_other_fields(
     assert updated_task["assignee"] == "Alice"
     assert updated_task["created_at"] == original_task["created_at"]
     assert updated_task["updated_at"]
+
+
+def test_patch_due_date_can_be_added_and_removed(
+    client: TestClient,
+    created_task: dict,
+) -> None:
+    add_due_date_response = client.patch(
+        f"/tasks/{created_task['id']}",
+        json={"due_date": "2026-09-01"},
+    )
+
+    assert add_due_date_response.status_code == 200
+    assert add_due_date_response.json()["due_date"] == "2026-09-01"
+
+    remove_due_date_response = client.patch(
+        f"/tasks/{created_task['id']}",
+        json={"due_date": None},
+    )
+
+    assert remove_due_date_response.status_code == 200
+    assert remove_due_date_response.json()["due_date"] is None
+
+
+def test_list_tasks_filter_overdue_returns_only_not_done_past_due(
+    client: TestClient,
+) -> None:
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
+
+    overdue_not_done = client.post(
+        "/tasks",
+        json={
+            "title": "Overdue not done",
+            "status": "InProgress",
+            "due_date": yesterday,
+        },
+    )
+    assert overdue_not_done.status_code == 201
+
+    not_overdue_future = client.post(
+        "/tasks",
+        json={
+            "title": "Future due date",
+            "status": "ToDo",
+            "due_date": tomorrow,
+        },
+    )
+    assert not_overdue_future.status_code == 201
+
+    done_past_due = client.post(
+        "/tasks",
+        json={
+            "title": "Done but past due",
+            "status": "Done",
+            "due_date": yesterday,
+        },
+    )
+    assert done_past_due.status_code == 201
+
+    no_due_date = client.post(
+        "/tasks",
+        json={
+            "title": "No due date",
+            "status": "InProgress",
+        },
+    )
+    assert no_due_date.status_code == 201
+
+    response = client.get(
+        "/tasks",
+        params={"overdue": "true"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["title"] == "Overdue not done"
+
+
+def test_list_tasks_filter_overdue_still_respects_status_and_priority(
+    client: TestClient,
+) -> None:
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+
+    high_overdue = client.post(
+        "/tasks",
+        json={
+            "title": "High overdue",
+            "status": "InProgress",
+            "priority": "High",
+            "due_date": yesterday,
+        },
+    )
+    assert high_overdue.status_code == 201
+
+    low_overdue = client.post(
+        "/tasks",
+        json={
+            "title": "Low overdue",
+            "status": "InProgress",
+            "priority": "Low",
+            "due_date": yesterday,
+        },
+    )
+    assert low_overdue.status_code == 201
+
+    response = client.get(
+        "/tasks",
+        params={"overdue": "true", "status": "InProgress", "priority": "High"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["title"] == "High overdue"
 
 
 def test_patch_not_found_returns_404(

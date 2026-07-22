@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from typing import Optional
 
@@ -25,6 +25,7 @@ class TaskCreate(BaseModel):
     status: TaskStatus = TaskStatus.TODO
     priority: TaskPriority = TaskPriority.MEDIUM
     assignee: Optional[str] = None
+    due_date: Optional[date] = None
 
     @field_validator("title")
     @classmethod
@@ -36,6 +37,20 @@ class TaskCreate(BaseModel):
             raise ValueError("title must be at most 200 characters")
         return v
 
+    @field_validator("due_date", mode="before")
+    @classmethod
+    def validate_due_date(cls, value):
+        if value is None:
+            return None
+        if isinstance(value, date):
+            return value
+        if isinstance(value, str):
+            try:
+                return datetime.strptime(value, "%Y-%m-%d").date()
+            except ValueError:
+                raise ValueError("due_date must be a valid date in YYYY-MM-DD format")
+        raise ValueError("due_date must be a valid date string")
+
 
 class TaskUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -45,6 +60,7 @@ class TaskUpdate(BaseModel):
     status: Optional[TaskStatus] = None
     priority: Optional[TaskPriority] = None
     assignee: Optional[str] = None
+    due_date: Optional[date] = None
 
     @field_validator("title")
     @classmethod
@@ -58,6 +74,20 @@ class TaskUpdate(BaseModel):
             raise ValueError("title must be at most 200 characters")
         return v
 
+    @field_validator("due_date", mode="before")
+    @classmethod
+    def validate_due_date(cls, value):
+        if value is None:
+            return None
+        if isinstance(value, date):
+            return value
+        if isinstance(value, str):
+            try:
+                return datetime.strptime(value, "%Y-%m-%d").date()
+            except ValueError:
+                raise ValueError("due_date must be a valid date in YYYY-MM-DD format")
+        raise ValueError("due_date must be a valid date string")
+
 
 class TaskResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -68,5 +98,6 @@ class TaskResponse(BaseModel):
     status: TaskStatus
     priority: TaskPriority
     assignee: Optional[str]
+    due_date: Optional[date] = None
     created_at: datetime
     updated_at: datetime

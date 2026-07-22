@@ -302,6 +302,8 @@
         background: var(--surface);
         border-radius: 18px;
         width: min(100%, 560px);
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
         padding: 26px;
         box-shadow: 0 30px 70px rgba(20, 33, 61, 0.18);
         border: 1px solid rgba(37, 99, 235, 0.08);
@@ -378,6 +380,50 @@
       .form-error {
         display: none;
         margin-top: 4px;
+      }
+
+      .comments-section {
+        border-top: 1px solid var(--border);
+        margin-top: 4px;
+        padding-top: 12px;
+      }
+
+      .comments-list {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--text);
+        max-height: 140px;
+        overflow-y: auto;
+      }
+
+      .comments-list:empty::before {
+        content: "No comments yet.";
+        color: var(--muted);
+        margin-left: -18px;
+        display: block;
+      }
+
+      .comments-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .comment-submit {
+        align-self: flex-end;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .comment-count {
+        color: var(--muted);
+        font-weight: 700;
       }
 
       .modal-actions {
@@ -513,6 +559,19 @@
             <label for="task-assignee">Assignee</label>
             <input id="task-assignee" name="assignee" type="text" placeholder="Who is responsible?" />
           </div>
+          <section class="comments-section" id="task-comments-section" hidden>
+            <label for="task-comment-input"><strong>Comments</strong></label>
+            <ul class="comments-list" id="task-comments-list"></ul>
+            <div class="comments-controls">
+              <textarea
+                id="task-comment-input"
+                rows="2"
+                placeholder="Add a comment"
+              ></textarea>
+              <div class="field-error" id="task-comment-error" aria-live="polite"></div>
+              <button type="button" class="comment-submit" id="task-comment-submit">Add Comment</button>
+            </div>
+          </section>
           <input id="task-id" name="taskId" type="hidden" />
           <div class="form-error" id="task-form-error" role="alert"></div>
           <div class="modal-actions">
@@ -574,6 +633,10 @@
         return (ALLOWED_TRANSITIONS[currentStatus] || []).includes(targetStatus);
       }
 
+      function getTaskComments(task) {
+        return Array.isArray(task?.comments) ? task.comments : [];
+      }
+
       function findTaskById(taskId) {
         if (!taskId && taskId !== 0) {
           return null;
@@ -592,13 +655,27 @@
           });
 
           if (!response.ok) {
-            throw new Error(`Request failed with status ${response.status}`);
+            const errorData = await response.json().catch(() => null);
+            const detail = typeof errorData?.detail === "string"
+              ? errorData.detail
+              : `Request failed with status ${response.status}`;
+
+            if (response.status === 404) {
+              await fetchTasks();
+              throw new Error("Task no longer exists. The board was refreshed.");
+            }
+
+            if (response.status === 422) {
+              throw new Error("That move is not allowed by the current workflow.");
+            }
+
+            throw new Error(detail);
           }
 
           await fetchTasks();
         } catch (error) {
           console.error("Unable to update task status", error);
-          alert("That move is not allowed by the current workflow.");
+          alert(error?.message || "Unable to update task status.");
         }
       }
 
@@ -670,6 +747,7 @@
             const assignee = escapeHtml(task.assignee || "Unassigned");
             const dueDate = task.due_date ? escapeHtml(task.due_date) : "";
             const overdue = isTaskOverdue(task);
+            const commentCount = getTaskComments(task).length;
 
             card.innerHTML = `
               <h3>${title}</h3>
@@ -681,6 +759,7 @@
               <div class="task-footer">
                 ${dueDate ? `<span class="due-date">Due ${dueDate}</span>` : ""}
                 ${overdue ? `<span class="overdue-pill">Overdue</span>` : ""}
+                <span class="comment-count">Comments ${commentCount}</span>
               </div>
               <button type="button" class="edit-button">Edit</button>
             `;
@@ -761,12 +840,52 @@
         const titleInput = document.getElementById("task-title");
         const titleError = document.getElementById("task-title-error");
         const formError = document.getElementById("task-form-error");
+        const commentInput = document.getElementById("task-comment-input");
+        const commentError = document.getElementById("task-comment-error");
 
         titleInput?.classList.remove("input-error");
+        commentInput?.classList.remove("input-error");
         titleError && (titleError.textContent = "");
+        commentError && (commentError.textContent = "");
         if (formError) {
           formError.textContent = "";
           formError.style.display = "none";
+        }
+      }
+
+      function renderTaskComments(task) {
+        const commentsSection = document.getElementById("task-comments-section");
+        const commentsList = document.getElementById("task-comments-list");
+        const commentInput = document.getElementById("task-comment-input");
+        const commentError = document.getElementById("task-comment-error");
+
+        if (!commentsSection || !commentsList) {
+          return;
+        }
+
+        if (!task) {
+          commentsSection.hidden = true;
+          commentsList.innerHTML = "";
+          if (commentInput) {
+            commentInput.value = "";
+          }
+          if (commentError) {
+            commentError.textContent = "";
+          }
+          return;
+        }
+
+        commentsSection.hidden = false;
+        commentsList.innerHTML = "";
+
+        getTaskComments(task).forEach((comment) => {
+          const listItem = document.createElement("li");
+          listItem.textContent = comment;
+          commentsList.appendChild(listItem);
+        });
+
+        if (commentError) {
+          commentError.textContent = "";
         }
       }
 
@@ -780,6 +899,7 @@
         const taskIdInput = document.getElementById("task-id");
         const modalTitle = document.getElementById("task-modal-title");
         const submitButton = document.getElementById("task-modal-submit");
+        const commentInput = document.getElementById("task-comment-input");
 
         if (titleInput) titleInput.value = "";
         if (descriptionInput) descriptionInput.value = "";
@@ -790,11 +910,13 @@
         if (taskIdInput) taskIdInput.value = "";
         if (modalTitle) modalTitle.textContent = "New Task";
         if (submitButton) submitButton.textContent = "Create";
+        if (commentInput) commentInput.value = "";
 
         currentModalMode = "create";
         currentTaskId = null;
         currentTaskOriginalStatus = null;
         clearModalErrors();
+        renderTaskComments(null);
       }
 
       function openModal(task = null) {
@@ -824,6 +946,7 @@
           if (dueDateInput) dueDateInput.value = task.due_date || "";
           if (assigneeInput) assigneeInput.value = task.assignee || "";
           if (taskIdInput) taskIdInput.value = task.id || "";
+          renderTaskComments(task);
         }
 
         if (overlay) {
@@ -963,18 +1086,78 @@
         }
       }
 
+      async function submitComment() {
+        const commentInput = document.getElementById("task-comment-input");
+        const commentError = document.getElementById("task-comment-error");
+        const comment = commentInput?.value ?? "";
+
+        if (!currentTaskId) {
+          return;
+        }
+
+        commentInput?.classList.remove("input-error");
+        if (commentError) {
+          commentError.textContent = "";
+        }
+
+        if (!comment.trim()) {
+          commentInput?.classList.add("input-error");
+          if (commentError) {
+            commentError.textContent = "Comment is required";
+          }
+          commentInput?.focus();
+          return;
+        }
+
+        try {
+          const response = await fetch(`${BASE_URL}/tasks/${currentTaskId}/comments`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ comment }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            const detail = typeof errorData?.detail === "string"
+              ? errorData.detail
+              : Array.isArray(errorData?.detail)
+                ? errorData.detail.map((item) => item?.msg).filter(Boolean).join("; ")
+                : `Unable to add comment (${response.status}).`;
+            throw new Error(detail);
+          }
+
+          const updatedTask = await response.json();
+          tasks = tasks.map((task) => String(task.id) === String(updatedTask.id) ? updatedTask : task);
+          renderBoard(tasks);
+          renderTaskComments(updatedTask);
+          if (commentInput) {
+            commentInput.value = "";
+          }
+        } catch (error) {
+          console.error("Unable to add comment", error);
+          commentInput?.classList.add("input-error");
+          if (commentError) {
+            commentError.textContent = error?.message || "Unable to add comment.";
+          }
+        }
+      }
+
       function attachModalListeners() {
         const openButton = document.getElementById("new-task-button");
         const closeButton = document.getElementById("task-modal-close");
         const cancelButton = document.getElementById("task-modal-cancel");
         const overlay = document.getElementById("task-modal-overlay");
         const submitButton = document.getElementById("task-modal-submit");
+        const submitCommentButton = document.getElementById("task-comment-submit");
         const dialog = overlay?.querySelector(".modal-dialog");
 
         openButton?.addEventListener("click", () => openModal());
         closeButton?.addEventListener("click", closeModal);
         cancelButton?.addEventListener("click", closeModal);
         submitButton?.addEventListener("click", submitTask);
+        submitCommentButton?.addEventListener("click", submitComment);
 
         overlay?.addEventListener("click", (event) => {
           if (event.target === overlay) {

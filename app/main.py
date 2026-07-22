@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import storage
 from app.models import (
+    TaskCommentCreate,
     TaskCreate,
     TaskPriority,
     TaskResponse,
@@ -133,3 +134,16 @@ def delete_task(task_id: str) -> None:
         )
 
     return None
+
+
+@app.post("/tasks/{task_id}/comments", response_model=TaskResponse, tags=["tasks"])
+def add_task_comment(task_id: str, payload: TaskCommentCreate) -> TaskResponse:
+    updated_task = storage.add_comment(task_id, payload.comment)
+
+    if updated_task is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task with id {task_id} not found",
+        )
+
+    return updated_task

@@ -1,4 +1,5 @@
 import importlib
+import json
 from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
@@ -30,6 +31,38 @@ def test_storage_persists_tasks_across_reload(monkeypatch, tmp_path) -> None:
     reloaded_storage = importlib.reload(storage_module)
 
     assert reloaded_storage.get_all_tasks()[0].title == "Persisted task"
+
+
+def test_storage_loads_legacy_tasks_without_comments(monkeypatch, tmp_path) -> None:
+    data_file = tmp_path / "tasks.json"
+    legacy_task_id = "legacy-task-1"
+    data_file.write_text(
+        json.dumps(
+            {
+                legacy_task_id: {
+                    "id": legacy_task_id,
+                    "title": "Legacy task",
+                    "description": "",
+                    "status": "ToDo",
+                    "priority": "Medium",
+                    "assignee": None,
+                    "due_date": None,
+                    "created_at": "2026-01-01T00:00:00+00:00",
+                    "updated_at": "2026-01-01T00:00:00+00:00"
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("TASKS_DATA_FILE", str(data_file))
+
+    import app.storage as storage_module
+
+    reloaded_storage = importlib.reload(storage_module)
+    loaded = reloaded_storage.get_task_by_id(legacy_task_id)
+
+    assert loaded is not None
+    assert loaded.comments == []
 
 
 def test_create_task_valid_returns_201_with_full_body(
@@ -276,6 +309,33 @@ def test_patch_due_date_can_be_added_and_removed(
     assert remove_due_date_response.json()["due_date"] is None
 
 
+def test_patch_invalid_due_date_format_15_08_2026_returns_422_with_validation_detail(
+    client: TestClient,
+) -> None:
+    create_response = client.post(
+        "/tasks",
+        json={
+            "title": "Task with valid initial due date",
+            "due_date": "2026-08-15",
+        },
+    )
+    assert create_response.status_code == 201
+
+    task_id = create_response.json()["id"]
+
+    response = client.patch(
+        f"/tasks/{task_id}",
+        json={"due_date": "15-08-2026"},
+    )
+
+    assert response.status_code == 422
+    assert "due_date" in response.json()["detail"][0]["loc"]
+    assert (
+        response.json()["detail"][0]["msg"]
+        == "Value error, due_date must be a valid date in YYYY-MM-DD format"
+    )
+
+
 def test_list_tasks_filter_overdue_returns_only_not_done_past_due(
     client: TestClient,
 ) -> None:
@@ -453,3 +513,97 @@ def test_delete_missing_returns_404(
     assert response.json() == {
         "detail": f"Task with id {task_id} not found"
     }
+
+
+def test_add_comment_to_existing_task_returns_200_and_updated_task(
+    client: TestClient,
+    created_task: dict,
+) -> None:
+    response = client.post(
+        f"/tasks/{created_task['id']}/comments",
+        json={"comment": "First comment"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == created_task["id"]
+    assert body["comments"] == ["First comment"]
+
+
+def test_add_comment_blank_returns_422(
+    client: TestClient,
+    created_task: dict,
+) -> None:
+    response = client.post(
+        f"/tasks/{created_task['id']}/comments",
+        json={"comment": "   "},
+    )
+
+    assert response.status_code == 422
+
+
+def test_add_comment_empty_string_returns_422(
+    client: TestClient,
+    created_task: dict,
+) -> None:
+    response = client.post(
+        f"/tasks/{created_task['id']}/comments",
+        json={"comment": ""},
+    )
+
+    assert response.status_code == 422
+
+
+def test_add_comment_missing_task_returns_404(
+    client: TestClient,
+) -> None:
+    task_id = "missing-task-id"
+    response = client.post(
+        f"/tasks/{task_id}/comments",
+        json={"comment": "hello"},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": f"Task with id {task_id} not found"
+    }
+
+
+def test_comments_stay_attached_to_correct_task(
+    client: TestClient,
+) -> None:
+    first_task = client.post("/tasks", json={"title": "Task A"}).json()
+    second_task = client.post("/tasks", json={"title": "Task B"}).json()
+
+    add_comment_response = client.post(
+        f"/tasks/{first_task['id']}/comments",
+        json={"comment": "Only on A"},
+    )
+    assert add_comment_response.status_code == 200
+
+    first_task_response = client.get(f"/tasks/{first_task['id']}")
+    second_task_response = client.get(f"/tasks/{second_task['id']}")
+
+    assert first_task_response.status_code == 200
+    assert second_task_response.status_code == 200
+    assert first_task_response.json()["comments"] == ["Only on A"]
+    assert second_task_response.json()["comments"] == []
+
+
+def test_comment_count_updates_when_multiple_comments_added(
+    client: TestClient,
+    created_task: dict,
+) -> None:
+    first_response = client.post(
+        f"/tasks/{created_task['id']}/comments",
+        json={"comment": "Comment 1"},
+    )
+    second_response = client.post(
+        f"/tasks/{created_task['id']}/comments",
+        json={"comment": "Comment 2"},
+    )
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+    assert len(second_response.json()["comments"]) == 2
+    assert second_response.json()["comments"] == ["Comment 1", "Comment 2"]

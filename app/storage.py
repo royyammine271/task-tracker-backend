@@ -51,6 +51,7 @@ def add_task(payload: TaskCreate) -> TaskResponse:
         priority=payload.priority,
         assignee=payload.assignee,
         due_date=payload.due_date,
+        comments=[],
         created_at=now,
         updated_at=now,
     )
@@ -119,6 +120,23 @@ def delete_task(task_id: str) -> bool:
         _save_tasks()
         return True
     return False
+
+
+def add_comment(task_id: str, comment: str) -> Optional[TaskResponse]:
+    _load_tasks()
+    task = _tasks.get(task_id)
+    if task is None:
+        return None
+
+    now = datetime.now(timezone.utc)
+    updated_data = task.model_dump()
+    updated_data["comments"] = [*task.comments, comment]
+    updated_data["updated_at"] = now
+
+    updated_task = TaskResponse(**updated_data)
+    _tasks[task_id] = updated_task
+    _save_tasks()
+    return updated_task
 
 
 def _reset() -> None:

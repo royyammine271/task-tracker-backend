@@ -2,7 +2,7 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class TaskStatus(str, Enum):
@@ -99,5 +99,20 @@ class TaskResponse(BaseModel):
     priority: TaskPriority
     assignee: Optional[str]
     due_date: Optional[date] = None
+    comments: list[str] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
+
+
+class TaskCommentCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    comment: str
+
+    @field_validator("comment")
+    @classmethod
+    def validate_comment(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("comment must not be blank")
+        return v

@@ -139,6 +139,28 @@ def add_comment(task_id: str, comment: str) -> Optional[TaskResponse]:
     return updated_task
 
 
+def delete_comment(task_id: str, comment_index: int) -> Optional[TaskResponse]:
+    _load_tasks()
+    task = _tasks.get(task_id)
+    if task is None:
+        return None
+
+    if comment_index < 0 or comment_index >= len(task.comments):
+        return None
+
+    now = datetime.now(timezone.utc)
+    updated_data = task.model_dump()
+    updated_comments = list(task.comments)
+    del updated_comments[comment_index]
+    updated_data["comments"] = updated_comments
+    updated_data["updated_at"] = now
+
+    updated_task = TaskResponse(**updated_data)
+    _tasks[task_id] = updated_task
+    _save_tasks()
+    return updated_task
+
+
 def _reset() -> None:
     _tasks.clear()
     _save_tasks()

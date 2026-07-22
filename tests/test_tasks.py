@@ -607,3 +607,56 @@ def test_comment_count_updates_when_multiple_comments_added(
     assert second_response.status_code == 200
     assert len(second_response.json()["comments"]) == 2
     assert second_response.json()["comments"] == ["Comment 1", "Comment 2"]
+
+
+def test_delete_comment_removes_only_target_comment(
+    client: TestClient,
+    created_task: dict,
+) -> None:
+    add_first = client.post(
+        f"/tasks/{created_task['id']}/comments",
+        json={"comment": "Keep me"},
+    )
+    add_second = client.post(
+        f"/tasks/{created_task['id']}/comments",
+        json={"comment": "Delete me"},
+    )
+
+    assert add_first.status_code == 200
+    assert add_second.status_code == 200
+
+    delete_response = client.delete(f"/tasks/{created_task['id']}/comments/1")
+
+    assert delete_response.status_code == 200
+    assert delete_response.json()["comments"] == ["Keep me"]
+
+
+def test_delete_comment_missing_task_returns_404(
+    client: TestClient,
+) -> None:
+    task_id = "missing-task-id"
+
+    response = client.delete(f"/tasks/{task_id}/comments/0")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": f"Task with id {task_id} not found"
+    }
+
+
+def test_delete_comment_invalid_index_returns_404(
+    client: TestClient,
+    created_task: dict,
+) -> None:
+    add_response = client.post(
+        f"/tasks/{created_task['id']}/comments",
+        json={"comment": "Only comment"},
+    )
+    assert add_response.status_code == 200
+
+    response = client.delete(f"/tasks/{created_task['id']}/comments/99")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": f"Comment index 99 not found for task {created_task['id']}"
+    }

@@ -43,16 +43,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5500",
-        "http://127.0.0.1:5500",
-        "http://localhost:5173",
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-        "http://localhost:8001",
-        "http://127.0.0.1:8001",
-        "null",
-    ],
+    allow_origins=["null"],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=False,
@@ -144,6 +136,29 @@ def add_task_comment(task_id: str, payload: TaskCommentCreate) -> TaskResponse:
         raise HTTPException(
             status_code=404,
             detail=f"Task with id {task_id} not found",
+        )
+
+    return updated_task
+
+
+@app.delete(
+    "/tasks/{task_id}/comments/{comment_index}",
+    response_model=TaskResponse,
+    tags=["tasks"],
+)
+def delete_task_comment(task_id: str, comment_index: int) -> TaskResponse:
+    updated_task = storage.delete_comment(task_id, comment_index)
+
+    if updated_task is None:
+        task = storage.get_task_by_id(task_id)
+        if task is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Task with id {task_id} not found",
+            )
+        raise HTTPException(
+            status_code=404,
+            detail=f"Comment index {comment_index} not found for task {task_id}",
         )
 
     return updated_task

@@ -396,6 +396,36 @@
         overflow-y: auto;
       }
 
+      .comment-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+
+      .comment-text {
+        flex: 1;
+        line-height: 1.35;
+        word-break: break-word;
+      }
+
+      .comment-delete {
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--high);
+        border-radius: 6px;
+        font-size: 0.8rem;
+        padding: 4px 8px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      .comment-delete:hover {
+        border-color: var(--high);
+        background: rgba(220, 38, 38, 0.08);
+      }
+
       .comments-list:empty::before {
         content: "No comments yet.";
         color: var(--muted);
@@ -583,7 +613,7 @@
     </div>
 
     <script>
-      const BASE_URL = "http://127.0.0.1:8001";
+      const BASE_URL = "http://127.0.0.1:8000";
       const STATUS_ORDER = ["ToDo", "InProgress", "Done"];
       const PRIORITY_ORDER = {
         High: 0,
@@ -878,9 +908,24 @@
         commentsSection.hidden = false;
         commentsList.innerHTML = "";
 
-        getTaskComments(task).forEach((comment) => {
+        getTaskComments(task).forEach((comment, index) => {
           const listItem = document.createElement("li");
-          listItem.textContent = comment;
+          listItem.className = "comment-item";
+
+          const textSpan = document.createElement("span");
+          textSpan.className = "comment-text";
+          textSpan.textContent = comment;
+
+          const deleteButton = document.createElement("button");
+          deleteButton.type = "button";
+          deleteButton.className = "comment-delete";
+          deleteButton.textContent = "Delete";
+          deleteButton.addEventListener("click", async () => {
+            await deleteComment(index);
+          });
+
+          listItem.appendChild(textSpan);
+          listItem.appendChild(deleteButton);
           commentsList.appendChild(listItem);
         });
 
@@ -1140,6 +1185,42 @@
           commentInput?.classList.add("input-error");
           if (commentError) {
             commentError.textContent = error?.message || "Unable to add comment.";
+          }
+        }
+      }
+
+      async function deleteComment(commentIndex) {
+        const commentError = document.getElementById("task-comment-error");
+
+        if (!currentTaskId) {
+          return;
+        }
+
+        if (commentError) {
+          commentError.textContent = "";
+        }
+
+        try {
+          const response = await fetch(`${BASE_URL}/tasks/${currentTaskId}/comments/${commentIndex}`, {
+            method: "DELETE",
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            const detail = typeof errorData?.detail === "string"
+              ? errorData.detail
+              : `Unable to delete comment (${response.status}).`;
+            throw new Error(detail);
+          }
+
+          const updatedTask = await response.json();
+          tasks = tasks.map((task) => String(task.id) === String(updatedTask.id) ? updatedTask : task);
+          renderBoard(tasks);
+          renderTaskComments(updatedTask);
+        } catch (error) {
+          console.error("Unable to delete comment", error);
+          if (commentError) {
+            commentError.textContent = error?.message || "Unable to delete comment.";
           }
         }
       }

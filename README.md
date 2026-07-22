@@ -15,6 +15,7 @@ A lightweight FastAPI backend for a Task Tracker project with a vanilla JS front
   - `DELETE /tasks/{task_id}`
 - Task comments:
   - `POST /tasks/{task_id}/comments`
+  - `DELETE /tasks/{task_id}/comments/{comment_index}`
   - Comments are stored per task as a list of strings
   - Blank or whitespace-only comments return `422`
   - Missing task IDs return `404`
@@ -35,6 +36,7 @@ A lightweight FastAPI backend for a Task Tracker project with a vanilla JS front
 - Comments section in edit modal:
   - View existing comments
   - Add a new comment
+  - Delete an existing comment
   - Inline validation/error messages
 - Comment count displayed on each task card
 - Overdue filter toggle

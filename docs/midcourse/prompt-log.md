@@ -24,7 +24,13 @@ Each prompt includes:
 
 ## Prompt 1: Idea Prompt
 
-### Prompt Used
+### Weak Prompt
+
+```text
+Help me with due dates.
+```
+
+### Strong Prompt Used
 
 ```text
 Before writing code, help me define the idea for this feature clearly.
@@ -55,41 +61,34 @@ Constraints:
 
 ### What AI Returned
 
-AI suggested keeping the feature small by adding one optional `due_date` field directly to each task. It recommended using Pydantic validation for the date format and computing overdue status using a simple rule: a task is overdue when its due date is before today and its status is not `Done`.
-
-AI also suggested that backend-based overdue filtering would be easier to test with pytest and FastAPI TestClient, while the frontend could still show the due date and overdue pill visually.
+AI recommended adding one optional due_date field, validating date format with Pydantic, and using a simple overdue rule: due date before today and status not Done. It also recommended backend overdue filtering for easier testability.
 
 ### What I Accepted
 
-I accepted:
-- Adding `due_date` as an optional task field.
-- Using `YYYY-MM-DD` as the accepted date format.
-- Treating overdue as a simple computed condition.
-- Computing overdue consistently in the backend for filtering.
-- Showing the due date and overdue pill in the frontend.
+- Optional due_date field.
+- YYYY-MM-DD date format.
+- Simple overdue rule.
+- Backend-based overdue filtering.
+- Due date and overdue pill in the frontend.
 
 ### What I Edited
 
-I kept the idea limited to due dates only, not due times. I also made sure the feature would work with the existing JSON file storage instead of introducing a database.
+- Limited scope to due dates only (no due times).
+- Kept JSON storage and existing architecture.
 
 ### What I Rejected
 
-I rejected:
-- Due times
-- Recurring due dates
-- Calendar integration
-- Reminders or notifications
-- User-specific deadlines
-- Database migrations
-- Large UI redesigns
+- Recurring dates, reminders, calendar integration, notifications, and large UI redesign.
 
-These were too complex or out of scope for the learning project.
+## Feature 1, Prompt 2: Implementation Prompt
 
----
+### Weak Prompt
 
-## Prompt 2: Implementation Prompt
+```text
+Implement due dates and overdue filter.
+```
 
-### Prompt Used
+### Strong Prompt Used
 
 ```text
 Implement the Feature 1 changes in small, focused edits.
@@ -125,44 +124,34 @@ Constraints:
 
 ### What AI Returned
 
-AI returned implementation guidance for both backend and frontend changes. The backend changes included adding `due_date` to the Pydantic task models, saving it to JSON storage, supporting create and update behavior, and adding an optional overdue API filter.
-
-The frontend changes included adding a date input to the task form or modal, displaying due dates on cards, showing an overdue pill, and adding an overdue filter control.
+AI provided backend and frontend implementation guidance: model updates, validation, persistence, overdue filter, modal input, card display, and overdue control.
 
 ### What I Accepted
 
-I accepted:
-- Adding `due_date` to create, update, and response models.
-- Saving `due_date` in the existing JSON task structure.
-- Allowing `due_date` to be optional.
-- Returning HTTP 422 for invalid date values.
-- Adding `overdue=true` as an API filter.
-- Showing a due date and overdue pill on the task cards.
+- due_date in create/update/response.
+- 422 validation for invalid dates.
+- JSON persistence updates.
+- overdue=true API filter.
+- due date and overdue pill UI.
 
 ### What I Edited
 
-I checked that the AI implementation did not rename existing fields such as `title`, `description`, `status`, `priority`, or `assignee`.
-
-I also kept the overdue rule simple and predictable: past due date plus status not equal to `Done`.
+- Verified no renaming of existing task fields.
+- Kept overdue logic minimal and predictable.
 
 ### What I Rejected
 
-I rejected any implementation that introduced:
-- New backend frameworks
-- Database storage
-- Time zone handling
-- Due times
-- Recurring dates
-- Reminders
-- Notifications
-- Authentication
-- A large frontend redesign
+- Database/storage redesign, timezone complexity, due times, recurring features, and broad UI redesign.
 
----
+## Feature 1, Prompt 3: Testing Prompt
 
-## Prompt 3: Testing Prompt
+### Weak Prompt
 
-### Prompt Used
+```text
+Write tests for due dates.
+```
+
+### Strong Prompt Used
 
 ```text
 Add focused pytest + FastAPI TestClient tests for the due dates + overdue filter feature.
@@ -189,37 +178,31 @@ Constraints:
 
 ### What AI Returned
 
-AI suggested a focused set of backend tests covering valid date creation, invalid date validation, optional due dates, updating due dates, overdue detection, and overdue filtering.
-
-It also suggested regression tests to confirm that existing status and priority filters still worked after adding due date logic.
+AI suggested a focused test set for valid/invalid due dates, optional due date behavior, overdue logic, and filter/regression coverage.
 
 ### What I Accepted
 
-I accepted the API-level tests because they directly match the acceptance criteria and are easy to run with pytest.
+- API-level tests aligned to acceptance criteria.
 
 ### What I Edited
 
-I planned to use clear fixed dates in the tests so the results would be easier to understand. For example, a past date should be used for overdue tasks and a future date should be used for non-overdue tasks.
+- Planned clear date choices (past vs future) for readable test intent.
 
 ### What I Rejected
 
-I rejected tests for:
-- Notifications
-- Calendar behavior
-- Time zones
-- Due times
-- Recurring due dates
-- User-specific deadlines
+- Tests for notifications, time zones, due times, recurring dates, and user-specific deadline behavior.
 
-Those behaviors are outside the selected feature scope.
-
----
-
-# Feature 2: Task Comments
+# Feature 2: Task comments
 
 ## Prompt 1: Idea Prompt
 
-### Prompt Used
+### Weak Prompt
+
+```text
+Help me add task comments.
+```
+
+### Strong Prompt Used
 
 ```text
 Before writing code, help me define the idea for this feature clearly.
@@ -251,44 +234,33 @@ Constraints:
 
 ### What AI Returned
 
-AI suggested keeping comments as a simple list stored directly inside each task. It recommended avoiding a separate comments table, users, timestamps, threaded comments, and editing or deleting comments.
-
-AI also suggested adding a small endpoint for adding comments to a specific task and displaying comments inside the existing edit modal or task detail area.
+AI recommended storing comments as a simple list on each task and adding a lightweight task-specific comment endpoint and modal UI.
 
 ### What I Accepted
 
-I accepted:
-- Storing comments directly with the task.
-- Keeping comments simple as text values.
-- Adding a comment section to the edit modal or task detail area.
-- Showing comment count on task cards.
-- Validating blank comments.
+- Comments stored on the task.
+- Simple text comments.
+- Comments section in edit modal/detail area.
+- Comment count on cards.
+- Blank comment validation.
 
 ### What I Edited
 
-I decided that comments should stay simple and should not include authors, timestamps, IDs, edit history, or delete behavior.
+- Kept comments minimal without metadata fields.
 
 ### What I Rejected
 
-I rejected:
-- Threaded comments
-- Comment editing
-- Comment deletion
-- Authors or user attribution
-- Timestamps
-- Mentions
-- Notifications
-- Markdown formatting
-- Real-time updates
-- A separate comment database/table
+- Threading, authors, timestamps, mentions, markdown, real-time updates, and separate comments table.
 
-These were too complex or out of scope.
+## Feature 2, Prompt 2: Implementation Prompt
 
----
+### Weak Prompt
 
-## Prompt 2: Implementation Prompt
+```text
+Implement comments.
+```
 
-### Prompt Used
+### Strong Prompt Used
 
 ```text
 Implement the Feature 2 changes in small, focused edits.
@@ -324,44 +296,35 @@ Constraints:
 
 ### What AI Returned
 
-AI returned implementation guidance for adding comments to the backend task structure, creating a comment request model, adding a task-specific comment endpoint, validating blank comments, updating JSON persistence, and updating the frontend to display and submit comments.
+AI returned guidance for backend model/storage/endpoint changes and frontend modal/comment-count updates.
 
 ### What I Accepted
 
-I accepted:
-- A `comments` field on each task.
-- A simple endpoint such as `POST /tasks/{task_id}/comments`.
-- Pydantic validation for non-blank comment text.
-- HTTP 422 for blank comments.
-- HTTP 404 for comments added to missing tasks.
-- Returning the updated task after adding a comment.
-- Showing comments and comment count in the frontend.
+- comments field.
+- POST /tasks/{task_id}/comments endpoint.
+- Non-blank validation with 422.
+- Missing task 404.
+- Updated task response shape.
+- Frontend comment list + count.
 
 ### What I Edited
 
-I reviewed the suggested implementation to make sure existing tasks without a `comments` field would still load correctly by defaulting comments to an empty list.
-
-I also kept the frontend simple by placing the comments section in the existing edit modal or task detail area instead of creating a new page.
+- Verified legacy tasks default comments to [].
+- Kept UI in existing modal rather than new page.
 
 ### What I Rejected
 
-I rejected implementation suggestions that added:
-- Comment authors
-- Timestamps
-- Comment IDs
-- Edit/delete functionality
-- Threaded replies
-- Markdown rendering
-- Notifications
-- Live updates
-- A new database table
-- A frontend framework
+- Metadata-heavy comments, threaded replies, markdown rendering, notifications, and framework/database additions.
 
----
+## Feature 2, Prompt 3: Testing Prompt
 
-## Prompt 3: Testing Prompt
+### Weak Prompt
 
-### Prompt Used
+```text
+Add tests for comments.
+```
+
+### Strong Prompt Used
 
 ```text
 Add focused pytest + FastAPI TestClient tests for the task comments feature.
@@ -387,38 +350,16 @@ Constraints:
 
 ### What AI Returned
 
-AI suggested API-level tests for adding comments, rejecting blank and whitespace-only comments, returning 404 for missing tasks, keeping comments attached to the correct task, and confirming older tasks without comments still load correctly.
+AI suggested tests for successful add flow, validation failures, missing-task failures, task attachment integrity, and legacy comments defaults.
 
 ### What I Accepted
 
-I accepted the test cases because they directly verify the intended backend behavior and protect against common bugs.
+- Core API tests directly tied to acceptance criteria.
 
 ### What I Edited
 
-I adjusted the tests to match the actual response shape of the implemented API. If the endpoint returns the full updated task, the tests should check the `comments` list. If the frontend uses a count, the frontend verification should check the displayed count.
+- Matched assertions to actual endpoint response shape (comments list vs displayed count).
 
 ### What I Rejected
 
-I rejected tests for:
-- Comment editing
-- Comment deletion
-- Comment authors
-- Timestamps
-- Notifications
-- Markdown formatting
-- Live updates
-- User permissions
-
-Those behaviors were not part of the selected feature.
-
----
-
-# Summary
-
-The final prompt structure is intentionally simple:
-
-- The first prompt defines the feature idea and limits the scope.
-- The second prompt asks AI to actually implement the feature.
-- The third prompt asks AI to add focused tests.
-
-This format supports the required workflow: plan the feature, constrain it, implement it in small AI-assisted steps, inspect the output, verify behavior, test it, and document what happened.
+- Tests for out-of-scope features such as authors, timestamps, notifications, live updates, and permissions.

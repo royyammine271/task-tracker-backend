@@ -1,0 +1,25 @@
+# Byte-compiled / cached Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables (never commit real secrets)
+.env
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Test caches
+.pytest_cache/
+
+# Editor / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Task data (only relevant once JSON storage is added later)
+tasks.json

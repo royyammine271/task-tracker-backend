@@ -16,6 +16,18 @@ def validate_status_transition(
     current: TaskStatus,
     new: TaskStatus,
 ) -> None:
+    """Validate that a status transition is allowed.
+
+    Args:
+        current (TaskStatus): Current task status.
+        new (TaskStatus): Requested next status.
+
+    Returns:
+        None.
+
+    Raises:
+        HTTPException: 422 when the transition is not in VALID_TRANSITIONS.
+    """
     if (current, new) not in VALID_TRANSITIONS:
         allowed = sorted(
             {

@@ -53,12 +53,19 @@ app.add_middleware(
 
 @app.get("/health", response_model=HealthResponse, status_code=200)
 def health_check() -> HealthResponse:
-    """
-    Simple liveness check endpoint.
+    """Return a lightweight liveness response.
 
-    Returns the current server status and an ISO-8601 UTC timestamp so
-    clients (or monitoring tools) can confirm the API is up and see when
-    the response was generated.
+    Args:
+        None.
+
+    Returns:
+        HealthResponse: API status and a UTC ISO-8601 timestamp.
+
+    Raises:
+        None.
+
+    Examples:
+        GET /health
     """
     return HealthResponse(
         status="ok",
@@ -73,6 +80,20 @@ def health_check() -> HealthResponse:
     tags=["tasks"],
 )
 def create_task(payload: TaskCreate) -> TaskResponse:
+    """Create a new task record.
+
+    Args:
+        payload (TaskCreate): Validated task creation input.
+
+    Returns:
+        TaskResponse: The created task with generated id and timestamps.
+
+    Raises:
+        None directly in this handler.
+
+    Examples:
+        POST /tasks
+    """
     return storage.add_task(payload)
 
 
@@ -82,11 +103,43 @@ def list_tasks(
     priority: TaskPriority | None = None,
     overdue: bool | None = None,
 ) -> list[TaskResponse]:
+    """List tasks with optional status, priority, and overdue filters.
+
+    Args:
+        status (TaskStatus | None): Optional status filter.
+        priority (TaskPriority | None): Optional priority filter.
+        overdue (bool | None): Optional overdue filter.
+
+    Returns:
+        list[TaskResponse]: Tasks matching the provided filters.
+
+    Raises:
+        None directly in this handler.
+
+    Examples:
+        GET /tasks
+        GET /tasks?status=InProgress
+        GET /tasks?overdue=true
+    """
     return storage.get_all_tasks(status=status, priority=priority, overdue=overdue)
 
 
 @app.get("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
 def get_task(task_id: str) -> TaskResponse:
+    """Get a single task by id.
+
+    Args:
+        task_id (str): Unique task identifier.
+
+    Returns:
+        TaskResponse: The matching task.
+
+    Raises:
+        HTTPException: 404 when the task id is not found.
+
+    Examples:
+        GET /tasks/{task_id}
+    """
     task = storage.get_task_by_id(task_id)
 
     if task is None:
@@ -100,6 +153,22 @@ def get_task(task_id: str) -> TaskResponse:
 
 @app.patch("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
 def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
+    """Apply a partial update to a task.
+
+    Args:
+        task_id (str): Unique task identifier.
+        payload (TaskUpdate): Partial task fields to update.
+
+    Returns:
+        TaskResponse: The updated task.
+
+    Raises:
+        HTTPException: 404 when the task id is not found.
+        HTTPException: 422 when status transition validation fails in storage rules.
+
+    Examples:
+        PATCH /tasks/{task_id}
+    """
     updated_task = storage.update_task(task_id, payload)
 
     if updated_task is None:
@@ -117,6 +186,20 @@ def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
     tags=["tasks"],
 )
 def delete_task(task_id: str) -> None:
+    """Delete a task by id.
+
+    Args:
+        task_id (str): Unique task identifier.
+
+    Returns:
+        None: Empty response body with HTTP 204 on success.
+
+    Raises:
+        HTTPException: 404 when the task id is not found.
+
+    Examples:
+        DELETE /tasks/{task_id}
+    """
     deleted = storage.delete_task(task_id)
 
     if not deleted:
@@ -130,6 +213,21 @@ def delete_task(task_id: str) -> None:
 
 @app.post("/tasks/{task_id}/comments", response_model=TaskResponse, tags=["tasks"])
 def add_task_comment(task_id: str, payload: TaskCommentCreate) -> TaskResponse:
+    """Append a comment to an existing task.
+
+    Args:
+        task_id (str): Unique task identifier.
+        payload (TaskCommentCreate): Validated comment payload.
+
+    Returns:
+        TaskResponse: The updated task including appended comments.
+
+    Raises:
+        HTTPException: 404 when the task id is not found.
+
+    Examples:
+        POST /tasks/{task_id}/comments
+    """
     updated_task = storage.add_comment(task_id, payload.comment)
 
     if updated_task is None:
@@ -147,6 +245,22 @@ def add_task_comment(task_id: str, payload: TaskCommentCreate) -> TaskResponse:
     tags=["tasks"],
 )
 def delete_task_comment(task_id: str, comment_index: int) -> TaskResponse:
+    """Delete one comment from a task by index.
+
+    Args:
+        task_id (str): Unique task identifier.
+        comment_index (int): Zero-based comment position to delete.
+
+    Returns:
+        TaskResponse: The updated task after comment removal.
+
+    Raises:
+        HTTPException: 404 when the task id is not found.
+        HTTPException: 404 when the comment index does not exist for the task.
+
+    Examples:
+        DELETE /tasks/{task_id}/comments/{comment_index}
+    """
     updated_task = storage.delete_comment(task_id, comment_index)
 
     if updated_task is None:

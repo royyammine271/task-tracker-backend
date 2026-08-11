@@ -1,110 +1,145 @@
-# Task Tracker Backend
+# Module 4 Task Tracker
 
-A lightweight FastAPI backend for a Task Tracker project with a vanilla JS frontend and JSON file storage.
+## 1) Project Overview
 
-## Features
+This repository contains a Module 4 Task Tracker built with FastAPI and Pydantic, with JSON file storage and a vanilla JavaScript frontend board.
 
-### Backend
+Current backend API routes are implemented in [app/main.py](app/main.py):
+- GET /health
+- POST /tasks
+- GET /tasks
+- GET /tasks/{task_id}
+- PATCH /tasks/{task_id}
+- DELETE /tasks/{task_id}
+- POST /tasks/{task_id}/comments
+- DELETE /tasks/{task_id}/comments/{comment_index}
 
-- Health endpoint: `GET /health`
-- Task CRUD endpoints:
-  - `POST /tasks`
-  - `GET /tasks`
-  - `GET /tasks/{task_id}`
-  - `PATCH /tasks/{task_id}`
-  - `DELETE /tasks/{task_id}`
-- Task comments:
-  - `POST /tasks/{task_id}/comments`
-  - `DELETE /tasks/{task_id}/comments/{comment_index}`
-  - Comments are stored per task as a list of strings
-  - Blank or whitespace-only comments return `422`
-  - Missing task IDs return `404`
-- Workflow rules for status transitions:
-  - `ToDo -> InProgress`
-  - `InProgress -> Done`
-  - `Done -> InProgress`
-- Optional filtering on list endpoint:
-  - by `status`
-  - by `priority`
-  - by `overdue`
+The frontend is in [frontend/index.html](frontend/index.html) and includes drag-and-drop status movement, due date display/filtering, and comments UI.
 
-### Frontend
+## 2) Prerequisites
 
-- Kanban board with three columns: To Do, In Progress, Done
-- Drag-and-drop status movement that follows backend transition rules
-- Task creation and editing modal (title, description, status, priority, due date, assignee)
-- Comments section in edit modal:
-  - View existing comments
-  - Add a new comment
-  - Delete an existing comment
-  - Inline validation/error messages
-- Comment count displayed on each task card
-- Overdue filter toggle
+- Python 3.11 recommended for Module 4 parity with CI and Docker.
+- pip
+- Git
+- Docker Desktop (optional, for container run)
 
-## Setup
+[VERIFY] Local development may work on Python versions other than 3.11, but CI and Docker are pinned to 3.11.
 
-### 1. Create and activate a virtual environment
+## 3) Local Setup
 
-**Linux / macOS:**
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
+From repository root:
 
-**Windows (PowerShell):**
-```powershell
-python -m venv venv
-venv\Scripts\Activate.ps1
-```
+Windows PowerShell:
+1. python -m venv .venv
+2. .\.venv\Scripts\Activate.ps1
+3. python -m pip install --upgrade pip
+4. pip install -r requirements.txt
+5. Copy-Item .env.example .env
 
-### 2. Install dependencies
+Linux/macOS:
+1. python3 -m venv .venv
+2. source .venv/bin/activate
+3. python -m pip install --upgrade pip
+4. pip install -r requirements.txt
+5. cp .env.example .env
 
-```bash
-pip install -r requirements.txt
-```
+## 4) Run the App Locally
 
-### 3. Configure environment variables
+From repository root:
 
-Copy the example env file and adjust values if needed:
-
-**Linux / macOS:**
-```bash
-cp .env.example .env
-```
-
-**Windows (PowerShell):**
-```powershell
-Copy-Item .env.example .env
-```
-
-## Running the server
-
-```bash
 uvicorn app.main:app --reload --port 8000
-```
 
-The API will be available at `http://localhost:8000`.
+API base URL:
+- http://127.0.0.1:8000
 
-## Open the frontend
+Quick health check:
+- curl http://127.0.0.1:8000/health
 
-Open `frontend/index.html` in a browser (for example with VS Code Live Server or by opening the file directly).
+PowerShell health check:
+- (Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/health).Content
 
-If your backend runs on a different host or port, update the `BASE_URL` in `frontend/index.html`.
+## 5) Run Tests
 
-## Run tests
+Course command from repository root:
 
-```bash
-pytest -q
-```
+pytest -v
 
-## Testing the health endpoint
+## 6) Run with Docker
 
-```bash
-curl http://localhost:8000/health
-```
+From repository root:
 
-Expected response:
+1. docker build -t task-tracker:dev .
+2. docker run -d --name tt-dev -p 8000:8000 task-tracker:dev
+3. docker ps --filter "name=^tt-dev$"
+4. curl http://127.0.0.1:8000/health
 
-```json
-{"status": "ok", "timestamp": "2026-07-04T12:00:00.000000+00:00"}
-```
+PowerShell health check:
+- (Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/health).StatusCode
+
+Stop while keeping the container:
+- docker stop tt-dev
+
+Start again:
+- docker start tt-dev
+
+Remove when done:
+- docker rm -f tt-dev
+
+## 7) CI Workflow Summary
+
+CI workflow file: [.github/workflows/ci.yml](.github/workflows/ci.yml)
+
+What it does:
+- Triggers on push and pull_request
+- Uses actions/checkout
+- Uses actions/setup-python with Python 3.11
+- Installs dependencies from [requirements.txt](requirements.txt)
+- Runs pytest -v
+
+This module CI does not include deployment steps.
+
+## 8) Project Structure
+
+task-tracker-backend/
+- app/
+  - main.py
+  - models.py
+  - storage.py
+  - business_rules.py
+  - schemas.py
+- tests/
+  - test_tasks.py
+  - conftest.py
+- frontend/
+  - index.html
+- docs/
+  - midcourse/
+    - mini-adr.md
+    - verification.md
+- requirements.txt
+- Dockerfile
+- .dockerignore
+- .github/workflows/ci.yml
+- CLAUDE.md
+
+## 9) Project Conventions and Current Limitations
+
+Conventions:
+- Keep changes small and scoped.
+- Preserve existing API contract unless explicitly requested.
+- Keep endpoint and error response style consistent.
+- Update docs when behavior changes.
+
+Current limitations (intentional for Module 4):
+- No authentication or user accounts
+- No database (JSON file storage only)
+- No deployment pipeline in this module
+- Not production-hardened (learning project scope)
+
+## 10) Technical Notes and Decisions
+
+Technical decision notes:
+- [docs/midcourse/mini-adr.md](docs/midcourse/mini-adr.md)
+
+Verification notes:
+- [docs/midcourse/verification.md](docs/midcourse/verification.md)

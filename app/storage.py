@@ -41,6 +41,17 @@ _load_tasks()
 
 
 def add_task(payload: TaskCreate) -> TaskResponse:
+    """Create and persist a new task.
+
+    Args:
+        payload (TaskCreate): Validated task creation payload.
+
+    Returns:
+        TaskResponse: Newly created persisted task.
+
+    Raises:
+        OSError: If writing the JSON data file fails.
+    """
     now = datetime.now(timezone.utc)
     task_id = str(uuid4())
     task = TaskResponse(
@@ -73,6 +84,19 @@ def get_all_tasks(
     priority: Optional[TaskPriority] = None,
     overdue: Optional[bool] = None,
 ) -> list[TaskResponse]:
+    """Return all tasks filtered by optional criteria.
+
+    Args:
+        status (Optional[TaskStatus]): Optional status filter.
+        priority (Optional[TaskPriority]): Optional priority filter.
+        overdue (Optional[bool]): Optional overdue-state filter.
+
+    Returns:
+        list[TaskResponse]: Tasks that match all provided filters.
+
+    Raises:
+        json.JSONDecodeError: If persisted task data is malformed.
+    """
     _load_tasks()
     tasks = list(_tasks.values())
     if status is not None:
@@ -85,11 +109,36 @@ def get_all_tasks(
 
 
 def get_task_by_id(task_id: str) -> Optional[TaskResponse]:
+    """Get one task by id.
+
+    Args:
+        task_id (str): Unique task identifier.
+
+    Returns:
+        Optional[TaskResponse]: Matching task if found, otherwise None.
+
+    Raises:
+        json.JSONDecodeError: If persisted task data is malformed.
+    """
     _load_tasks()
     return _tasks.get(task_id)
 
 
 def update_task(task_id: str, payload: TaskUpdate) -> Optional[TaskResponse]:
+    """Update an existing task and persist changes.
+
+    Args:
+        task_id (str): Unique task identifier.
+        payload (TaskUpdate): Partial update payload.
+
+    Returns:
+        Optional[TaskResponse]: Updated task, unchanged task when no fields are
+            provided, or None when task does not exist.
+
+    Raises:
+        HTTPException: 422 when status transition validation fails.
+        OSError: If writing the JSON data file fails.
+    """
     _load_tasks()
     task = _tasks.get(task_id)
     if task is None:
@@ -114,6 +163,17 @@ def update_task(task_id: str, payload: TaskUpdate) -> Optional[TaskResponse]:
 
 
 def delete_task(task_id: str) -> bool:
+    """Delete a task by id.
+
+    Args:
+        task_id (str): Unique task identifier.
+
+    Returns:
+        bool: True when a task was deleted, False when it was not found.
+
+    Raises:
+        OSError: If writing the JSON data file fails after deletion.
+    """
     _load_tasks()
     if task_id in _tasks:
         del _tasks[task_id]
@@ -123,6 +183,18 @@ def delete_task(task_id: str) -> bool:
 
 
 def add_comment(task_id: str, comment: str) -> Optional[TaskResponse]:
+    """Append a comment to a task and persist changes.
+
+    Args:
+        task_id (str): Unique task identifier.
+        comment (str): Comment text already validated by request model.
+
+    Returns:
+        Optional[TaskResponse]: Updated task when found, otherwise None.
+
+    Raises:
+        OSError: If writing the JSON data file fails.
+    """
     _load_tasks()
     task = _tasks.get(task_id)
     if task is None:
@@ -140,6 +212,19 @@ def add_comment(task_id: str, comment: str) -> Optional[TaskResponse]:
 
 
 def delete_comment(task_id: str, comment_index: int) -> Optional[TaskResponse]:
+    """Delete a task comment by zero-based index.
+
+    Args:
+        task_id (str): Unique task identifier.
+        comment_index (int): Zero-based index of the comment to remove.
+
+    Returns:
+        Optional[TaskResponse]: Updated task when task and index exist,
+            otherwise None.
+
+    Raises:
+        OSError: If writing the JSON data file fails.
+    """
     _load_tasks()
     task = _tasks.get(task_id)
     if task is None:

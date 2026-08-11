@@ -113,9 +113,9 @@ task-tracker-backend/
 - frontend/
   - index.html
 - docs/
-  - midcourse/
-    - mini-adr.md
-    - verification.md
+  - ci-workflow-decision-note.md
+  - mini-adr.md
+  - verification.md
 - requirements.txt
 - Dockerfile
 - .dockerignore
@@ -139,8 +139,8 @@ Current limitations (intentional for Module 4):
 ## 10) Technical Notes and Decisions
 
 Technical decision notes:
-- [docs/midcourse/ci-workflow-decision-note.md](docs/midcourse/ci-workflow-decision-note.md)
-- [docs/midcourse/mini-adr.md](docs/midcourse/mini-adr.md)
+- [docs/ci-workflow-decision-note.md](docs/ci-workflow-decision-note.md)
+- [docs/mini-adr.md](docs/mini-adr.md)
 
 Verification notes:
-- [docs/midcourse/verification.md](docs/midcourse/verification.md)
+- [docs/verification.md](docs/verification.md)

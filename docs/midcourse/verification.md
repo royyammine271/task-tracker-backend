@@ -24,7 +24,7 @@ Command used:
 - & "c:/Users/royya/Desktop/AI Assisted Coding Certificate/Task-Tracker/task-tracker-backend/.venv-1/Scripts/python.exe" -m pytest -q
 
 Current result:
-- 32 passed, 0 failed
+- 35 passed, 0 failed
 - Warnings: 3 (deprecation warnings only)
 
 Coverage relevant to task comments (from tests/test_tasks.py):
@@ -137,7 +137,7 @@ Final confirmation command:
 - & "c:/Users/royya/Desktop/AI Assisted Coding Certificate/Task-Tracker/task-tracker-backend/.venv-1/Scripts/python.exe" -m pytest -q
 
 Result after restoring temporary breaks:
-- 32 passed, 0 failed
+- 35 passed, 0 failed
 
 ## 6) Conclusion
 

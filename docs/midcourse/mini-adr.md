@@ -52,7 +52,7 @@ Design decisions:
 - Task cards may show a comment count.
 - Adding a comment to a missing task returns `HTTP 404`.
 
-For this learning project, comments do not need authors, timestamps, editing, deleting, threading, or separate comment ownership.
+For this learning project, comments support add and delete operations only. They do not need authors, timestamps, editing, threading, or separate comment ownership.
 
 ## Alternatives Suggested by AI
 
@@ -82,7 +82,7 @@ Rejected because overdue status changes over time. Storing it directly could bec
 
 ### Comment Authors, Timestamps, Editing, and Deleting
 
-Rejected because the project has no authentication or user accounts, and the selected feature only requires adding and displaying comments. These additions would expand the feature beyond the required learning scope.
+Rejected because the project has no authentication or user accounts, and the selected feature only requires simple text comments with basic add/delete behavior. Rich metadata and editing would expand the feature beyond the required learning scope.
 
 ### Real-Time Comment Updates
 
@@ -100,11 +100,11 @@ Rejected because real-time updates are explicitly out of scope. The frontend onl
 
 ### Negative Consequences
 
-- Comments are basic and do not support editing or deleting.
+- Comments are basic and do not support authorship metadata, timestamps, or editing.
 - JSON storage is not ideal for concurrent writes.
 - Overdue behavior depends on consistent date handling.
 - More advanced filtering or reporting would be easier with a database.
 
 ## Final Decision
 
-Implement due dates, overdue filtering, and task comments as small extensions to the existing JSON-backed task model and REST API. Keep the implementation focused on validation, task display, filtering, and simple comments. Avoid database migration, authentication, real-time features, or advanced comment functionality.
+Implement due dates, overdue filtering, and task comments as small extensions to the existing JSON-backed task model and REST API. Keep the implementation focused on validation, task display, filtering, and basic add/delete comments. Avoid database migration, authentication, real-time features, or advanced comment functionality.

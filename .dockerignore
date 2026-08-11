@@ -1,0 +1,32 @@
+# Secrets and local env
+.env
+.env.*
+
+# Git metadata
+.git
+.gitignore
+
+# Python environments
+venv/
+.venv/
+.venv-1/
+
+# Python cache and test cache
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+*.py[cod]
+
+# Node modules (if present)
+node_modules/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

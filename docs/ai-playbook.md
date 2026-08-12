@@ -1,38 +1,40 @@
 # Personal AI Coding Playbook
 
 ## 1. When I reach for AI first
-- When I need a first draft of project documentation and I can verify every claim against the repo files.
-- When I want a structured implementation plan before making a small, scoped project change.
-- When I need to compare options for a design decision and then I will choose the simplest option that fits the current architecture.
+- I use AI to draft project docs, release notes, and summaries when I can verify every claim against the repo before I keep it.
+- I ask AI for a first pass on a task plan when the task is small, scoped, and clearly tied to a file or workflow already in the project.
+- I use it to compare options for a design decision, then choose the smallest option that fits the current architecture instead of accepting the biggest idea.
+- It was especially useful for turning repo facts into clean structure: README checks, release evidence, and review summaries.
 
-## 2. When I do not reach for AI
-- When the task would require secrets, credentials, tokens, or environment values.
-- When the work is already clearly defined and small enough to do directly in the repo.
-- When the change would add unsupported scope such as notifications, auth, or a production database.
+## 2. When I do not reach for AI first
+- I do not use AI for anything involving secrets, credentials, tokens, or environment values.
+- I do not let AI drive the work when the task is already obvious and I can do it directly in the repo without guesswork.
+- I slow down when the task would add unsupported scope, such as auth, production storage, notifications, or feature creep that is not in the project.
+- I also avoid using it as the final authority when a decision depends on a real runtime check or the repo’s actual branch/test state.
 
 ## 3. My non-negotiables
-- I only share the minimum context needed for the task.
-- I treat assumptions as assumptions and clearly label them if they cannot be confirmed in the repo.
-- I trace each claim back to a file, a test, or a live check before I treat it as evidence.
-- I do not accept AI output as truth just because it sounds confident.
+- I only share the minimum context required for the task.
+- I treat assumptions as assumptions and label them as such until they are confirmed by code, tests, or a live check.
+- I trace each claim back to a file, a command, a test run, or a runtime result before I trust it.
+- I do not accept AI output just because it sounds confident, and I do not paste personal or sensitive data into AI tools.
+- I own the final decision and the final wording in any repo artifact I submit.
 
 ## 4. My review rules
 - I check for over-claims before I accept an idea.
-- I reject anything that broadens the project beyond its learning-project scope.
-- I verify generated commands, code, and tests against the actual repo before I trust them.
-- I keep notes of what AI suggested, what I accepted, what I changed, and what I rejected.
+- I inspect the diff and ask: does this match the project scope, the guardrails, and the actual repo state?
+- I verify generated commands and documentation with real commands and real outputs, not with guesses.
+- I grade findings by usefulness, not by how polished the sentence sounds; if the conclusion is shallow or unverified, I reject it.
+- I keep a record of what AI suggested, what I accepted, what I corrected, and what I rejected.
 
-## 5. Course evidence that shaped these rules
-- The project guardrails in [AGENTS.md](../AGENTS.md) explicitly say to keep changes small, read-only by default, and only change app files when explicitly approved.
-- The AI prompt log in [prompt-log.md](prompt-log.md) shows the accepted pattern: propose, review, edit, and reject scope creep.
-- The reflection and verification notes show that AI was useful for drafts and consistency, but human review was required for requirements, environment-specific commands, and final quality.
+## 5. What I am still figuring out
+- I am still learning when AI is most useful for code review versus when it becomes a distraction.
+- I want better team norms for deciding when a suggestion is a real fix versus a broad “good idea” that should be downgraded or refused.
+- I am still refining how much repo context to give the tool without creating false confidence or overfitting to a narrow example.
 
-## 6. Ownership statement
-I own the final decision for every AI-assisted change. I am responsible for checking the repo, validating the behavior, and rejecting anything that is unsupported, unverified, or outside scope. I will not paste secrets or sensitive data into AI tools, and I will not claim a result is correct unless I have a matching file, test, or runtime check.
-
-## 7. Decision card
-- For repo documentation: AI is useful as a draft generator, but I verify every fact against files.
-- For code review: I use AI only as a second look, never as the final authority.
-- For debugging: I verify the behavior with runtime checks and tests before trusting a fix.
-- For architecture choices: I prefer the smallest option that fits the current app and course scope.
-- I will never paste credentials, tokens, or sensitive environment values into an AI tool.
+## 6. Decision Card
+- New feature: AI can help draft the plan, but I still decide whether it matches the project’s scope and rules.
+- Code review: AI is a second look, not the final authority.
+- Debugging: I verify behavior with real commands and tests before trusting a fix.
+- Infrastructure: I look for explicit runtime evidence and avoid over-claiming on Docker, CI, or deployment conditions.
+- Never-paste: I will not share secrets, credentials, tokens, or environment values with AI.
+- One rule: if I cannot show evidence from the repo or a live check, I do not keep the claim.

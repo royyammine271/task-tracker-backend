@@ -3,7 +3,6 @@
 Source used for items: security findings currently documented in docs/security-review.md.
 
 | Item shared | Risk | Reason | Safer future version | Ambiguity to resolve |
-|---|---|---|---|---|
 | S-01 Unbounded user text fields | Medium | This shares internal validation gaps in application behavior, which is non-sensitive but still implementation detail. | In a sample FastAPI app, some user-input fields are length-checked inconsistently; suggest generic validation patterns without seeing exact schema. | Is the repository public or private? If public course repo, this could be Low. |
 | S-02 No auth/authorization outside course scope | Medium | This discloses a known control absence in a specific codebase, which is internal security posture information. | In a classroom toy app with no real users, auth is intentionally omitted; provide a checklist for adding auth in production. | Was any deployment URL or environment detail shared with this finding? |
 | S-03 Storage I/O and JSON parse exceptions can bubble as server errors | Medium | This exposes concrete failure-mode details of backend persistence and error handling. | A local file-backed API may surface unhandled storage exceptions; suggest generic exception-boundary patterns. | Were stack traces, filesystem paths, or runtime logs shared, or only high-level description? |

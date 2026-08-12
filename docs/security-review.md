@@ -3,7 +3,6 @@
 ## Reconciliation Table
 
 | Agreement | AI-only | You-only |
-|---|---|---|
 | S-01 Unbounded user text fields (accepted as Valid in grading pass). | S-04 Local CORS/frontend base URL assumption (kept as Noise in grading pass). | None provided in grading notes. needs evidence |
 | S-02 No auth/authorization outside course scope (accepted as Valid production risk in grading pass). | S-06 CI lacks security scan steps (kept as Noise for this module in grading pass). | None provided in grading notes. needs evidence |
 | S-03 Storage I/O and JSON parse exceptions can bubble as server errors (accepted as Valid in grading pass). |  |  |
@@ -17,7 +16,6 @@ AI also produced environment/scope-noise items; the grading pass added context f
 ## Top-3 Security Backlog (Valid Findings)
 
 | Rank | Finding | Why it matters | Suggested owner | Next action |
-|---|---|---|---|---|
 | 1 | S-05 Unpinned dependencies and CI drift | Reproducibility and supply-chain stability can change between runs without code changes. | DevOps + backend | Pin versions in dependency file and re-run CI to confirm deterministic installs. |
 | 2 | S-01 Unbounded description/assignee/comment fields | Large payloads can increase storage/API pressure and create abuse surface. | Backend | Add explicit max length constraints and tests for over-limit inputs. |
 | 3 | S-03 Storage read/write exceptions not normalized at API boundary | Malformed data or file I/O faults can surface as uncontrolled 500 paths. | Backend | Add controlled exception handling and stable API error responses for storage failures. |
@@ -25,7 +23,6 @@ AI also produced environment/scope-noise items; the grading pass added context f
 ## Grader-Style Finding Classification
 
 | Finding ID | My grade | Why I graded it this way | Evidence used |
-|---|---|---|---|
 | S-01 | Valid | The issue is real in this repo: title is bounded, but other user-controlled text fields are not explicitly bounded, which could allow oversized payload/storage growth outside classroom use. | [app/models.py](app/models.py#L24), [app/models.py](app/models.py#L27), [app/models.py](app/models.py#L110), [app/models.py](app/models.py#L117) |
 | S-02 | Valid | No authentication is intentionally out of scope for this course project, but it is still a legitimate production-risk finding if this app were exposed beyond class context. | [app/main.py](app/main.py#L77), [app/main.py](app/main.py#L109), [app/main.py](app/main.py#L214), [README.md](README.md#L125), [AGENTS.md](AGENTS.md#L85) |
 | S-03 | Valid | Storage I/O and parsing are not wrapped in controlled API-level error handling, so malformed JSON or file write/read failures can surface as server errors. | [app/storage.py](app/storage.py#L21), [app/storage.py](app/storage.py#L31), [app/main.py](app/main.py#L71) |

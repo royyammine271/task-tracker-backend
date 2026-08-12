@@ -25,7 +25,6 @@
 ## Documentation claim-vs-reality log
 
 | Claim checked | Evidence used | Result | Change made, if any |
-| --- | --- | --- | --- |
 | CI runs on push and pull_request | [.github/workflows/ci.yml](../.github/workflows/ci.yml) | Matched | No change |
 | GET /health returns HTTP 200 | Local app run and Docker run responses | Matched | No change |
 | Docker runs uvicorn on port 8000 | Docker logs from container run | Matched | No change |

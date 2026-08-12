@@ -1,5 +1,29 @@
 # Module 4 Task Tracker
 
+## Final Project Status
+
+This repository is a small learning project and is intentionally kept within scope. It is a FastAPI backend with JSON storage, a simple frontend, and a narrow set of task-tracking behaviors. No new product features were added in the final project pass; the aim was to confirm the app still works, document the release checks, and explain how AI was used responsibly.
+
+### Scope confirmation
+- The project remains limited to task CRUD, status transitions, optional due dates, and the existing frontend workflow.
+- It does not add authentication, a production database, notifications, or unrelated UI redesign.
+- The accepted design is documented in [docs/mini-adr.md](docs/mini-adr.md) and the evidence trail is in [docs/prompt-log.md](docs/prompt-log.md), [docs/reflection.md](docs/reflection.md), and [docs/verification.md](docs/verification.md).
+
+### Release baseline
+The current verified baseline from this repo is:
+- Branch: `final-project`
+- Test command: `./.venv/Scripts/python.exe -m pytest -q`
+- Result: `35 passed, 3 warnings in 0.60s`
+- Runtime check: `curl http://127.0.0.1:8002/health`
+- Result: HTTP 200 with a JSON status payload
+
+### Release checks to use before handoff
+1. Run the backend test suite: `./.venv/Scripts/python.exe -m pytest -q`
+2. Start the app: `./.venv/Scripts/uvicorn app.main:app --host 127.0.0.1 --port 8000`
+3. Confirm the health endpoint returns HTTP 200: `http://127.0.0.1:8000/health`
+4. Keep the repo within original project scope and do not add unrelated features
+5. If Docker is available, run: `docker build -t task-tracker:dev .` and `docker run --rm -p 8000:8000 task-tracker:dev`
+
 ## 1) Project Overview
 
 This repository contains a Module 4 Task Tracker built with FastAPI and Pydantic, with JSON file storage and a vanilla JavaScript frontend board.
@@ -47,7 +71,10 @@ Linux/macOS:
 
 From repository root:
 
-uvicorn app.main:app --reload --port 8000
+```powershell
+.\.venv\Scripts\Activate.ps1
+uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
 
 API base URL:
 - http://127.0.0.1:8000
@@ -58,32 +85,35 @@ Quick health check:
 PowerShell health check:
 - (Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/health).Content
 
+Verified local result in this environment:
+- Health endpoint responded with HTTP 200 on port 8003 when a free port was used, which matches the app's `/health` behavior.
+
 ## 5) Run Tests
 
-Course command from repository root:
+From repository root:
 
-pytest -v
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+Verified local result:
+- 35 passed, 3 warnings in 0.51s
 
 ## 6) Run with Docker
 
 From repository root:
 
-1. docker build -t task-tracker:dev .
-2. docker run -d --name tt-dev -p 8000:8000 task-tracker:dev
-3. docker ps --filter "name=^tt-dev$"
-4. curl http://127.0.0.1:8000/health
+```powershell
+docker build -t task-tracker:release .
+docker run --rm -d --name task-tracker-verify -p 8010:8000 task-tracker:release
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8010/health
+```
 
-PowerShell health check:
-- (Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/health).StatusCode
+Verified local result:
+- HTTP 200 OK from the containerized app on port 8010.
 
-Stop while keeping the container:
-- docker stop tt-dev
-
-Start again:
-- docker start tt-dev
-
-Remove when done:
-- docker rm -f tt-dev
+Stop container:
+- docker rm -f task-tracker-verify
 
 ## 7) CI Workflow Summary
 
@@ -113,16 +143,24 @@ task-tracker-backend/
 - frontend/
   - index.html
 - docs/
-  - ci-workflow-decision-note.md
+  - ai-playbook.md
+  - final-ai-review.md
+  - release-evidence.md
   - mini-adr.md
   - verification.md
 - requirements.txt
 - Dockerfile
 - .dockerignore
 - .github/workflows/ci.yml
-- CLAUDE.md
+- AGENTS.md
 
-## 9) Project Conventions and Current Limitations
+## 9) AI Usage and Human Review
+
+This project includes a documented AI review trail. The evidence is in [docs/prompt-log.md](docs/prompt-log.md), [docs/reflection.md](docs/reflection.md), [docs/verification.md](docs/verification.md), and [docs/final-ai-review.md](docs/final-ai-review.md).
+
+The key rule was simple: AI output was treated as an initial draft, not an unquestioned source of truth. Any suggestion that widened scope, added unsupported features, or ignored the project guardrails was reviewed and either edited or rejected.
+
+## 10) Project Conventions and Current Limitations
 
 Conventions:
 - Keep changes small and scoped.
@@ -130,17 +168,18 @@ Conventions:
 - Keep endpoint and error response style consistent.
 - Update docs when behavior changes.
 
-Current limitations (intentional for Module 4):
+Current limitations (intentional for final project):
 - No authentication or user accounts
 - No database (JSON file storage only)
-- No deployment pipeline in this module
+- No deployment pipeline beyond the course CI example
 - Not production-hardened (learning project scope)
 
-## 10) Technical Notes and Decisions
+## 11) Technical Notes and Decisions
 
 Technical decision notes:
-- [docs/ci-workflow-decision-note.md](docs/ci-workflow-decision-note.md)
 - [docs/mini-adr.md](docs/mini-adr.md)
+- [docs/ai-playbook.md](docs/ai-playbook.md)
 
 Verification notes:
 - [docs/verification.md](docs/verification.md)
+- [docs/release-evidence.md](docs/release-evidence.md)

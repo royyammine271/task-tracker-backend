@@ -7,10 +7,10 @@
 
 ## AI code review mini-log
 | AI comment | Grade: Useful / Noise / Wrong | Reason | Verification or decision |
-| Update the local run command to show the exact Windows PowerShell flow and verified results. | Useful | This was actionable and matched the repo state; it prevented stale or vague instructions. | Kept and tied to the actual verified commands. |
-| Add a clear Docker command block that matches the actual runtime evidence. | Useful | It reduced ambiguity and tied the docs to a real container run instead of a theoretical example. | Kept and aligned with the Docker health check. |
-| State the health endpoint result without claiming Docker succeeded unless runtime was checked. | Useful | This prevented an over-claim and kept the evidence honest. | Kept; this correction was necessary before final handoff. |
-| Rewrite the final readiness notes to be shorter and explicit about warnings vs failures. | Noise | This mostly improved wording and did not materially change technical risks or repo behavior. | Accepted only as wording cleanup, not a technical fix. |
+| In changed file `app/storage.py` (commit `dd6d710`), `_load_tasks()` has no defensive handling for malformed JSON and could fail startup or request paths hard; recommend controlled exception handling at API boundary. | Useful | This is a real reliability risk in code paths that load persisted data and can surface as 500 responses. | Kept as a valid review finding; verified by tracing `_load_tasks()` usage through list/get/update/delete flows in code and confirming no explicit error normalization in route handlers. |
+| In changed file `app/storage.py`, `add_comment()` stores comments as plain strings without length limits; recommend a max length guard to prevent oversized payload persistence and UI rendering strain. | Useful | This is a code-level input hardening suggestion tied to existing comment persistence behavior. | Kept as a scoped improvement note; verified current validator only strips/blank-checks in `TaskCommentCreate` and does not enforce a size cap. |
+| In changed file `app/main.py`, `delete_task_comment()` correctly distinguishes missing task vs invalid comment index and returns separate 404 details; keep this behavior and ensure tests lock it in. | Useful | This is a positive review comment on error-contract correctness and helps prevent regressions. | Kept and verified against tests covering missing task and invalid index response details. |
+| In changed file `app/storage.py`, suggestion to replace JSON file persistence with a database now is out of scope for this course module and current architecture. | Noise | It is an architectural expansion, not a focused code review action for the current diff and requirements. | Rejected for this submission scope; retained JSON persistence and existing API contracts. |
 
 ## AI security mini-review
 | Finding | File evidence | Grade: Valid / False Positive / Noise | Reason | Next action |

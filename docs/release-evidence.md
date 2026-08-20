@@ -11,7 +11,8 @@
 
 ## CI evidence
 - Workflow file: [.github/workflows/ci.yml](../.github/workflows/ci.yml)
-- Latest run link or note: No GitHub Actions run URL was available from this local environment; the workflow file is present and the equivalent local pytest run passed.
+- Latest green run link: https://github.com/royyammine271/task-tracker-backend/actions/runs/31603794921
+- Workflow run note: CI #9 completed successfully for commit `7d793fe` on branch `final-project` (run shown on the CI workflow page).
 - Test command used by CI: `pytest -v`
 - Shortcut check: no continue-on-error / no `|| true` / pytest is not skipped.
 
